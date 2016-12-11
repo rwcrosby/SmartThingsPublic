@@ -19,6 +19,11 @@ preferences {
 	section("Turn on when emotion detected") {
 		input "themotion", "capability.motionSensor", required: true, title: "Whence?"
 	}
+    
+    section("Wait this long before turning off the light") {
+    	input "minutes", "number", required: true, title: "Minutes?"
+    }
+    
     section("Turn on this light") {
         input "theswitch", "capability.switch", required: true
     }
@@ -39,9 +44,41 @@ def updated() {
 
 def initialize() {
     subscribe(themotion, "motion.active", motionDetectedHandler)
+    subscribe(themotion, "motion.inactive", motionStoppedHandler)
 }
 
 def motionDetectedHandler(event) {
-    log.debug "motiondetectedHandler called $event"
+    log.debug "motionDetectedHandler called $event"
     theswitch.on()
+}
+
+def motionStoppedHandler(event) {
+    log.debug "motionStoppedHandler called $event"
+    runIn minutes, checkInactive
+}
+
+def checkInactive() {
+	log.debug "checkInactive as scheduled"
+		
+  	def state = themotion.currentState("motion")
+    
+    if ( state.value == "inactive") {
+    	log.debug "Showing inactive"
+        
+        def elapsed = now() - state.date.time    // In milliseconds
+        def threshold = 1000 * minutes           // In milliseconds
+        
+        if ( elapsed >= threshold ) {
+        	log.debug "Inactive long enough: $elapsed"
+            theswitch.off()
+        }
+        else {
+        	log.debug "Not inactive long enough: $elapsed"
+        }
+        
+    }
+    else {    
+    	log.debug "Showing active"
+    }
+
 }
