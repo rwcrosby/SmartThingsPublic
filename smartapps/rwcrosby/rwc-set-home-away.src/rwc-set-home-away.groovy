@@ -8,7 +8,7 @@ definition(
     name: "RWC Set Home Away",
     namespace: "rwcrosby",
     author: "Ralph W.  Crosby",
-    description: "Set home or away modes depending on who&#39;s home.",
+    description: "Set home or away modes depending on who's home.",
     category: "Family",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
@@ -17,13 +17,15 @@ definition(
 
 preferences {
 	section("Who Needs to be Home?") {
-		paragraph "Add Presence Sensors"
-        input "pSensors", "capability.presenceSensor", required: true, multiple: true
+        input "pSensors", "capability.presenceSensor", title: "Presense Sensors", required: true, multiple: true
     }	
     
     section("States to Set") {
-    	input "someoneHome", "mode", title: "Mode to set when somebody is home"
-    	input "allGone", "mode", title: "Mode to set when nobody is home"
+    	input "someoneHome", "location.mode", title: "Mode to set when somebody is home", required: true
+    	input "allGone", "location.mode", title: "Mode to set when nobody is home", required: true
+    }
+    section("Away Delay") {
+        input "awayDelay", "number", title: "Delay in minutes", required: true
     }
 }
 
@@ -47,11 +49,13 @@ def initialize() {
 
 def present (event) {
 	log.debug "A sensor present event: $event.value, current mode: $location.mode, homemode: $someoneHome, awaymode: $allGone"
-    
+      
     // Already home, do nothing
     if (location.mode == someoneHome) {
     	return
     }
+
+	log.debug "State change to home required"
 
 	// If the new mode exists, set it
 	if (location.modes?.find{it.name == someoneHome}) {
@@ -60,7 +64,6 @@ def present (event) {
     }  else {
     	log.warn "Tried to change to undefined mode '${someoneHome}'"
     }
-
 }
 
 def notPresent (event) {
@@ -90,4 +93,7 @@ def notPresent (event) {
     		log.warn "Tried to change to undefined mode '${allGone}'"
     	}
 	}
+    else {
+    	log.debug "Somebody still home"
+    }
 }
