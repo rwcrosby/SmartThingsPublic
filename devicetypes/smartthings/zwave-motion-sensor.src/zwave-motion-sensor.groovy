@@ -21,6 +21,7 @@ metadata {
 		capability "Motion Sensor"
 		capability "Sensor"
 		capability "Battery"
+		capability "Health Check"
 
 		fingerprint mfr: "011F", prod: "0001", model: "0001", deviceJoinName: "Schlage Motion Sensor"  // Schlage motion
 		fingerprint mfr: "014A", prod: "0001", model: "0001", deviceJoinName: "Ecolink Motion Sensor"  // Ecolink motion
@@ -28,6 +29,7 @@ metadata {
 		fingerprint mfr: "0060", prod: "0001", model: "0002", deviceJoinName: "Everspring Motion Sensor"  // Everspring SP814
 		fingerprint mfr: "0060", prod: "0001", model: "0003", deviceJoinName: "Everspring Motion Sensor"  // Everspring HSP02
 		fingerprint mfr: "011A", prod: "0601", model: "0901", deviceJoinName: "Enerwave Motion Sensor"  // Enerwave ZWN-BPC
+		fingerprint mfr: "0063", prod: "4953", model: "3133", deviceJoinName: "GE Smart Motion Sensor"
 	}
 
 	simulator {
@@ -37,8 +39,8 @@ metadata {
 	
 	tiles {
 		standardTile("motion", "device.motion", width: 2, height: 2) {
-			state("active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#53a7c0")
-			state("inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#ffffff")
+			state("active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#00A0DC")
+			state("inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#cccccc")
 		}
 		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat") {
 			state("battery", label:'${currentValue}% battery', unit:"")
@@ -47,6 +49,11 @@ metadata {
 		main "motion"
 		details(["motion", "battery"])
 	}
+}
+
+def updated(){
+// Device wakes up every 4 hours, this interval allows us to miss one wakeup notification before marking offline
+	sendEvent(name: "checkInterval", value: 8 * 60 * 60 + 2 * 60, displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
 }
 
 def parse(String description) {
